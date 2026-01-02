@@ -1,0 +1,308 @@
+---
+import { SITE } from "@config";
+import Layout from "@layouts/Layout.astro";
+import DocsHeader from "@components/DocsHeader.astro";
+import Footer from "@components/Footer.astro";
+import Sidebar from "@components/Sidebar.astro";
+import { getDocsNavigation, CATEGORY_META } from "@utils/getDocsNavigation";
+import { getCollection } from "astro:content";
+
+const navigation = await getDocsNavigation("/docs/");
+const docs = await getCollection("docs", ({ data }) => !data.draft);
+
+// Group docs by category for the landing page
+const docsByCategory = docs.reduce(
+  (acc, doc) => {
+    const category = doc.data.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(doc);
+    return acc;
+  },
+  {} as Record<string, typeof docs>
+);
+
+// Sort docs within each category
+Object.keys(docsByCategory).forEach(category => {
+  docsByCategory[category].sort((a, b) => a.data.order - b.data.order);
+});
+---
+
+<Layout
+  title={`Documentation | ${SITE.title}`}
+  description="Browse our comprehensive documentation and guides."
+>
+  <DocsHeader activeNav="docs" />
+
+  <div class="docs-wrapper">
+    <Sidebar navigation={navigation} currentPath="/docs/" />
+
+    <main id="main-content" class="docs-main">
+      <div class="docs-landing">
+        <header class="landing-header">
+          <h1 class="landing-title">Documentation</h1>
+          <p class="landing-description">
+            Everything you need to know about our services. Browse by category
+            or use the search to find what you're looking for.
+          </p>
+        </header>
+
+        <div class="category-grid">
+          {
+            Object.entries(CATEGORY_META)
+              .sort(([, a], [, b]) => a.order - b.order)
+              .map(([categoryKey, meta]) => {
+                const categoryDocs = docsByCategory[categoryKey] || [];
+                if (categoryDocs.length === 0) return null;
+
+                return (
+                  <div class="category-card">
+                    <div class="category-header">
+                      <span class="category-icon">
+                        {meta.icon === "rocket" && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                            <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                            <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                            <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                          </svg>
+                        )}
+                        {meta.icon === "book" && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                          </svg>
+                        )}
+                        {meta.icon === "code" && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <polyline points="16 18 22 12 16 6" />
+                            <polyline points="8 6 2 12 8 18" />
+                          </svg>
+                        )}
+                        {meta.icon === "question" && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                            <path d="M12 17h.01" />
+                          </svg>
+                        )}
+                      </span>
+                      <h2 class="category-title">{meta.label}</h2>
+                    </div>
+                    <p class="category-description">{meta.description}</p>
+                    <ul class="category-links">
+                      {categoryDocs.slice(0, 3).map(doc => (
+                        <li>
+                          <a href={`/docs/${doc.slug}/`}>{doc.data.title}</a>
+                        </li>
+                      ))}
+                    </ul>
+                    {categoryDocs.length > 3 && (
+                      <a
+                        href={`/docs/${categoryDocs[0].slug}/`}
+                        class="view-all"
+                      >
+                        View all {categoryDocs.length} articles →
+                      </a>
+                    )}
+                  </div>
+                );
+              })
+          }
+        </div>
+
+        <section class="quick-links">
+          <h2>Need Help?</h2>
+          <div class="quick-links-grid">
+            <a href="/services/" class="quick-link">
+              <span class="quick-link-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                  <line x1="16" x2="16" y1="2" y2="6"></line>
+                  <line x1="8" x2="8" y1="2" y2="6"></line>
+                  <line x1="3" x2="21" y1="10" y2="10"></line>
+                </svg>
+              </span>
+              <span class="quick-link-text">
+                <strong>Book a Consultation</strong>
+                <span>Get expert help for your project</span>
+              </span>
+            </a>
+            <a href="/search/" class="quick-link">
+              <span class="quick-link-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </svg>
+              </span>
+              <span class="quick-link-text">
+                <strong>Search Documentation</strong>
+                <span>Find answers quickly</span>
+              </span>
+            </a>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <Footer />
+</Layout>
+
+<style>
+  .docs-wrapper {
+    @apply flex min-h-screen;
+  }
+
+  .docs-main {
+    @apply flex-1 pt-16 lg:ml-72;
+  }
+
+  .docs-landing {
+    @apply mx-auto max-w-4xl px-4 py-12 lg:px-8;
+  }
+
+  .landing-header {
+    @apply mb-12 text-center;
+  }
+
+  .landing-title {
+    @apply mb-4 text-4xl font-bold text-skin-base sm:text-5xl;
+  }
+
+  .landing-description {
+    @apply mx-auto max-w-2xl text-lg text-skin-base opacity-80;
+  }
+
+  .category-grid {
+    @apply grid gap-6 sm:grid-cols-2;
+  }
+
+  .category-card {
+    @apply rounded-xl border border-skin-line bg-skin-card/30 p-6
+           transition-all duration-200 hover:border-skin-accent hover:shadow-lg;
+  }
+
+  .category-header {
+    @apply mb-3 flex items-center gap-3;
+  }
+
+  .category-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg
+           bg-skin-accent/10 text-skin-accent;
+  }
+
+  .category-icon svg {
+    @apply h-5 w-5 fill-transparent stroke-current;
+  }
+
+  .category-title {
+    @apply text-xl font-semibold text-skin-base;
+  }
+
+  .category-description {
+    @apply mb-4 text-sm text-skin-base opacity-70;
+  }
+
+  .category-links {
+    @apply mb-3 flex flex-col gap-2;
+  }
+
+  .category-links li {
+    @apply list-none;
+  }
+
+  .category-links a {
+    @apply text-sm text-skin-base hover:text-skin-accent;
+  }
+
+  .view-all {
+    @apply text-sm font-medium text-skin-accent hover:underline;
+  }
+
+  .quick-links {
+    @apply mt-16;
+  }
+
+  .quick-links h2 {
+    @apply mb-6 text-center text-2xl font-bold text-skin-base;
+  }
+
+  .quick-links-grid {
+    @apply grid gap-4 sm:grid-cols-2;
+  }
+
+  .quick-link {
+    @apply flex items-center gap-4 rounded-lg border border-skin-line
+           p-4 transition-all duration-200 hover:border-skin-accent hover:bg-skin-card;
+  }
+
+  .quick-link-icon {
+    @apply flex h-12 w-12 flex-shrink-0 items-center justify-center
+           rounded-lg bg-skin-accent/10 text-skin-accent;
+  }
+
+  .quick-link-icon svg {
+    @apply h-6 w-6 fill-transparent stroke-current;
+  }
+
+  .quick-link-text {
+    @apply flex flex-col;
+  }
+
+  .quick-link-text strong {
+    @apply text-skin-base;
+  }
+
+  .quick-link-text span {
+    @apply text-sm text-skin-base opacity-70;
+  }
+</style>

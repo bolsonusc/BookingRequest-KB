@@ -1,0 +1,71 @@
+---
+export interface Props {
+  title: string;
+  href: string;
+  isActive?: boolean;
+  badge?: "new" | "beta" | "deprecated" | "";
+}
+
+const { title, href, isActive = false, badge } = Astro.props;
+---
+
+<li>
+  <a href={href} class:list={["sidebar-item", { active: isActive }]}>
+    <span class="item-title">{title}</span>
+    {
+      badge && badge !== "" && (
+        <span class:list={["item-badge", `badge-${badge}`]}>{badge}</span>
+      )
+    }
+  </a>
+</li>
+
+<style>
+  li {
+    @apply list-none;
+  }
+
+  .sidebar-item {
+    @apply flex items-center justify-between gap-2 rounded-md
+           border-l-2 border-transparent px-3 py-2 text-sm
+           text-skin-base opacity-80 transition-all duration-150
+           hover:border-skin-accent hover:bg-skin-card hover:opacity-100;
+  }
+
+  .sidebar-item.active {
+    @apply border-skin-accent bg-skin-card font-medium
+           text-skin-accent opacity-100;
+  }
+
+  .item-title {
+    @apply flex-1;
+  }
+
+  .item-badge {
+    @apply rounded-full px-2 py-0.5 text-xs font-medium uppercase;
+  }
+
+  .badge-new {
+    @apply bg-green-500/20 text-green-600;
+  }
+
+  :global(html[data-theme="dark"]) .badge-new {
+    @apply bg-green-500/20 text-green-400;
+  }
+
+  .badge-beta {
+    @apply bg-blue-500/20 text-blue-600;
+  }
+
+  :global(html[data-theme="dark"]) .badge-beta {
+    @apply bg-blue-500/20 text-blue-400;
+  }
+
+  .badge-deprecated {
+    @apply bg-red-500/20 text-red-600;
+  }
+
+  :global(html[data-theme="dark"]) .badge-deprecated {
+    @apply bg-red-500/20 text-red-400;
+  }
+</style>

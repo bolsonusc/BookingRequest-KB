@@ -1,0 +1,130 @@
+---
+import { SITE } from "@config";
+import Layout from "./Layout.astro";
+import DocsHeader from "@components/DocsHeader.astro";
+import Footer from "@components/Footer.astro";
+import Sidebar from "@components/Sidebar.astro";
+import TableOfContents from "@components/TableOfContents.astro";
+import PrevNextNav from "@components/PrevNextNav.astro";
+import { getDocsNavigation, getAdjacentDocs } from "@utils/getDocsNavigation";
+import type { MarkdownHeading } from "astro";
+
+export interface Props {
+  title: string;
+  description: string;
+  slug: string;
+  headings?: MarkdownHeading[];
+  lastUpdated?: Date;
+}
+
+const { title, description, slug, headings = [], lastUpdated } = Astro.props;
+
+const currentPath = `/docs/${slug}/`;
+const navigation = await getDocsNavigation(currentPath);
+const { prev, next } = await getAdjacentDocs(slug);
+---
+
+<Layout title={`${title} | ${SITE.title}`} description={description}>
+  <DocsHeader />
+
+  <div class="docs-wrapper">
+    <Sidebar navigation={navigation} currentPath={currentPath} />
+
+    <main id="main-content" class="docs-main">
+      <article class="docs-article">
+        <header class="article-header">
+          <h1 class="article-title">{title}</h1>
+          <p class="article-description">{description}</p>
+          {
+            lastUpdated && (
+              <p class="article-updated">
+                Last updated:{" "}
+                <time datetime={lastUpdated.toISOString()}>
+                  {lastUpdated.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+              </p>
+            )
+          }
+        </header>
+
+        <div class="docs-content docs-prose">
+          <slot />
+        </div>
+
+        <PrevNextNav prev={prev} next={next} />
+      </article>
+    </main>
+
+    {
+      headings.length > 0 && (
+        <aside class="toc-sidebar">
+          <TableOfContents headings={headings} />
+        </aside>
+      )
+    }
+  </div>
+
+  <Footer />
+</Layout>
+
+<style>
+  .docs-wrapper {
+    @apply flex min-h-screen;
+  }
+
+  .docs-main {
+    @apply flex-1 pt-16 lg:ml-72;
+  }
+
+  .docs-article {
+    @apply py-6 px-6;
+    margin-left: 40px;
+    margin-right: 40px;
+  }
+
+  @media (min-width: 1280px) {
+    .docs-article {
+      margin-left: 50px;
+      margin-right: 220px; /* Space for TOC sidebar */
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .docs-article {
+      margin-left: 1rem;
+      margin-right: 1rem;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+
+  .article-header {
+    @apply mb-6 border-b border-skin-line pb-4;
+  }
+
+  .article-title {
+    @apply mb-2 text-2xl font-bold text-skin-base sm:text-3xl;
+  }
+
+  .article-description {
+    @apply text-base leading-relaxed text-skin-base opacity-70;
+  }
+
+  .article-updated {
+    @apply mt-2 text-sm text-skin-base opacity-50;
+  }
+
+  .toc-sidebar {
+    @apply hidden xl:block xl:fixed xl:top-24;
+    right: 40px;
+    width: 180px;
+  }
+
+  .docs-content {
+    @apply text-base leading-relaxed;
+  }
+</style>

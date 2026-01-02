@@ -2,29 +2,77 @@
 import { getCollection } from "astro:content";
 import { SITE } from "@config";
 import Layout from "@layouts/Layout.astro";
-import Main from "@layouts/Main.astro";
-import Header from "@components/Header.astro";
+import DocsHeader from "@components/DocsHeader.astro";
 import Footer from "@components/Footer.astro";
-import SearchBar from "@components/Search";
-import getSortedPosts from "@utils/getSortedPosts";
+import DocSearch from "@components/DocSearch";
+import { CATEGORY_META } from "@utils/getDocsNavigation";
+import type { DocSearchItem } from "@components/DocSearch";
 
-// Retrieve all published articles
-const posts = await getCollection("blog", ({ data }) => !data.draft);
-const sortedPosts = getSortedPosts(posts);
+// Get docs
+const docs = await getCollection("docs", ({ data }) => !data.draft);
+const services = await getCollection("services");
 
-// List of items to search in
-const searchList = sortedPosts.map(({ data, slug }) => ({
-  title: data.title,
-  description: data.description,
-  data,
-  slug,
-}));
+// Build search list with docs and services
+const searchList: DocSearchItem[] = [
+  ...docs.map(doc => ({
+    title: doc.data.title,
+    description: doc.data.description,
+    category: doc.data.category,
+    categoryLabel: CATEGORY_META[doc.data.category]?.label || doc.data.category,
+    slug: doc.slug,
+    type: "doc" as const,
+  })),
+  ...services.map(service => ({
+    title: service.data.title,
+    description: service.data.description,
+    category: "services",
+    categoryLabel: "Services",
+    slug: service.slug,
+    type: "service" as const,
+  })),
+];
 ---
 
-<Layout title={`Search | ${SITE.title}`}>
-  <Header activeNav="search" />
-  <Main pageTitle="Search" pageDesc="Search any article ...">
-    <SearchBar client:load searchList={searchList} />
-  </Main>
+<Layout
+  title={`Search | ${SITE.title}`}
+  description="Search our documentation and services"
+>
+  <DocsHeader activeNav="search" />
+
+  <main id="main-content" class="search-main">
+    <div class="search-container">
+      <header class="search-header">
+        <h1 class="search-title">Search</h1>
+        <p class="search-description">
+          Find documentation, guides, and services
+        </p>
+      </header>
+
+      <DocSearch client:load searchList={searchList} />
+    </div>
+  </main>
+
   <Footer />
 </Layout>
+
+<style>
+  .search-main {
+    @apply min-h-screen pt-16;
+  }
+
+  .search-container {
+    @apply mx-auto max-w-3xl px-4 py-12 lg:px-8;
+  }
+
+  .search-header {
+    @apply mb-8 text-center;
+  }
+
+  .search-title {
+    @apply mb-2 text-3xl font-bold text-skin-base;
+  }
+
+  .search-description {
+    @apply text-skin-base opacity-70;
+  }
+</style>

@@ -1,0 +1,162 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+  price: string;
+  duration?: string;
+  priceType: "hourly" | "flat" | "custom";
+  features: string[];
+  bookingUrl: string;
+  highlighted?: boolean;
+}
+
+const {
+  title,
+  description,
+  price,
+  duration,
+  priceType,
+  features,
+  bookingUrl,
+  highlighted = false,
+} = Astro.props;
+
+const priceLabel =
+  priceType === "hourly"
+    ? "/hour"
+    : priceType === "flat"
+      ? " flat rate"
+      : " (custom)";
+---
+
+<div class:list={["service-card", { highlighted }]}>
+  {highlighted && <div class="popular-badge">Most Popular</div>}
+
+  <div class="card-header">
+    <h3 class="card-title">{title}</h3>
+    <p class="card-description">{description}</p>
+  </div>
+
+  <div class="card-pricing">
+    <span class="price">{price}</span>
+    <span class="price-label">{priceLabel}</span>
+    {duration && <span class="duration">{duration}</span>}
+  </div>
+
+  <ul class="features-list">
+    {
+      features.map(feature => (
+        <li>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          {feature}
+        </li>
+      ))
+    }
+  </ul>
+
+  <a
+    href={bookingUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="book-btn"
+  >
+    Book Now
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+      <polyline points="15 3 21 3 21 9"></polyline>
+      <line x1="10" y1="14" x2="21" y2="3"></line>
+    </svg>
+  </a>
+</div>
+
+<style>
+  .service-card {
+    @apply relative flex flex-col rounded-2xl border border-skin-line
+           bg-skin-fill p-6 transition-all duration-300
+           hover:border-skin-accent hover:shadow-xl;
+  }
+
+  .service-card.highlighted {
+    @apply border-skin-accent;
+    box-shadow: 0 0 0 2px rgba(var(--color-accent), 0.2);
+  }
+
+  .popular-badge {
+    @apply absolute -top-3 left-1/2 -translate-x-1/2 transform
+           rounded-full bg-skin-accent px-4 py-1 text-xs
+           font-semibold uppercase text-skin-inverted;
+  }
+
+  .card-header {
+    @apply mb-6;
+  }
+
+  .card-title {
+    @apply mb-2 text-xl font-bold text-skin-base;
+  }
+
+  .card-description {
+    @apply text-sm text-skin-base opacity-70;
+  }
+
+  .card-pricing {
+    @apply mb-6 flex flex-wrap items-baseline gap-1;
+  }
+
+  .price {
+    @apply text-3xl font-bold text-skin-accent;
+  }
+
+  .price-label {
+    @apply text-sm text-skin-base opacity-70;
+  }
+
+  .duration {
+    @apply ml-2 rounded-full bg-skin-card px-2 py-0.5 text-xs text-skin-base;
+  }
+
+  .features-list {
+    @apply mb-8 flex flex-1 flex-col gap-3;
+  }
+
+  .features-list li {
+    @apply flex items-start gap-2 text-sm text-skin-base;
+  }
+
+  .features-list svg {
+    @apply mt-0.5 h-4 w-4 flex-shrink-0 fill-transparent stroke-skin-accent;
+  }
+
+  .book-btn {
+    @apply flex items-center justify-center gap-2 rounded-lg
+           bg-skin-accent px-6 py-3 font-semibold
+           text-skin-inverted transition-all duration-200
+           hover:opacity-90 hover:shadow-lg;
+  }
+
+  .book-btn svg {
+    @apply h-4 w-4 fill-transparent stroke-current;
+  }
+</style>

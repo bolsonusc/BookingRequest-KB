@@ -1,163 +1,488 @@
 ---
 import { getCollection } from "astro:content";
+import { SITE } from "@config";
 import Layout from "@layouts/Layout.astro";
-import Header from "@components/Header.astro";
+import DocsHeader from "@components/DocsHeader.astro";
 import Footer from "@components/Footer.astro";
-import LinkButton from "@components/LinkButton.astro";
-import Hr from "@components/Hr.astro";
-import Card from "@components/Card";
-import Socials from "@components/Socials.astro";
-import getSortedPosts from "@utils/getSortedPosts";
-import { SOCIALS } from "@config";
+import { CATEGORY_META } from "@utils/getDocsNavigation";
 
-const posts = await getCollection("blog");
+const docs = await getCollection("docs", ({ data }) => !data.draft);
+const services = await getCollection("services");
 
-const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+// Group docs by category
+const docsByCategory = docs.reduce(
+  (acc, doc) => {
+    const category = doc.data.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(doc);
+    return acc;
+  },
+  {} as Record<string, typeof docs>
+);
 
-const socialCount = SOCIALS.filter(social => social.active).length;
+// Sort within categories
+Object.keys(docsByCategory).forEach(category => {
+  docsByCategory[category].sort((a, b) => a.data.order - b.data.order);
+});
+
+const sortedServices = services.sort((a, b) => a.data.order - b.data.order);
 ---
 
-<Layout>
-  <Header />
-  <main id="main-content">
-    <section id="hero">
-      <h1>Mingalaba</h1>
-      <a
-        target="_blank"
-        href="/rss.xml"
-        class="rss-link"
-        aria-label="rss feed"
-        title="RSS Feed"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" class="rss-icon"
-          ><path
-            d="M19 20.001C19 11.729 12.271 5 4 5v2c7.168 0 13 5.832 13 13.001h2z"
-          ></path><path
-            d="M12 20.001h2C14 14.486 9.514 10 4 10v2c4.411 0 8 3.589 8 8.001z"
-          ></path><circle cx="6" cy="18" r="2"></circle>
-        </svg>
-        <span class="sr-only">RSS Feed</span>
-      </a>
+<Layout
+  title={SITE.title}
+  description="Knowledge base and booking platform for expert consultations, technical support, and code reviews."
+>
+  <DocsHeader />
 
-      <p>
-        AstroPaper is a minimal, responsive, accessible and SEO-friendly Astro
-        blog theme. This theme follows best practices and provides accessibility
-        out of the box. Light and dark mode are supported by default. Moreover,
-        additional color schemes can also be configured.
-      </p>
-      <p>
-        Read the blog posts or check
-        <LinkButton
-          className="underline decoration-dashed underline-offset-4 hover:text-skin-accent"
-          href="https://github.com/satnaing/astro-paper#readme"
-        >
-          README
-        </LinkButton> for more info.
-      </p>
-      {
-        // only display if at least one social link is enabled
-        socialCount > 0 && (
-          <div class="social-wrapper">
-            <div class="social-links">Social Links:</div>
-            <Socials />
-          </div>
-        )
-      }
+  <main id="main-content">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">Knowledge Base</h1>
+        <p class="hero-description">
+          Everything you need to succeed. Explore our documentation, guides, and
+          book expert consultations for personalized support.
+        </p>
+        <div class="hero-actions">
+          <a href="/docs/" class="btn-primary">
+            Browse Documentation
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+          </a>
+          <a href="/services/" class="btn-secondary">View Services</a>
+        </div>
+        <div class="hero-search">
+          <a href="/search/" class="search-box">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.3-4.3"></path>
+            </svg>
+            <span>Search documentation...</span>
+            <kbd>Ctrl+K</kbd>
+          </a>
+        </div>
+      </div>
     </section>
 
-    <Hr />
+    <!-- Documentation Categories -->
+    <section class="categories">
+      <div class="section-container">
+        <h2 class="section-title">Documentation</h2>
+        <p class="section-description">
+          Explore our comprehensive guides and references
+        </p>
 
-    {
-      featuredPosts.length > 0 && (
-        <>
-          <section id="featured">
-            <h2>Featured</h2>
-            <ul>
-              {featuredPosts.map(({ data, slug }) => (
-                <Card
-                  href={`/posts/${slug}/`}
-                  frontmatter={data}
-                  secHeading={false}
-                />
-              ))}
-            </ul>
-          </section>
-          {recentPosts.length > 0 && <Hr />}
-        </>
-      )
-    }
+        <div class="category-grid">
+          {
+            Object.entries(CATEGORY_META)
+              .sort(([, a], [, b]) => a.order - b.order)
+              .map(([categoryKey, meta]) => {
+                const categoryDocs = docsByCategory[categoryKey] || [];
+                if (categoryDocs.length === 0) return null;
+                const firstDoc = categoryDocs[0];
 
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts">
-          <h2>Recent Posts</h2>
-          <ul>
-            {recentPosts.map(
-              ({ data, slug }, index) =>
-                index < 4 && (
-                  <Card
-                    href={`/posts/${slug}/`}
-                    frontmatter={data}
-                    secHeading={false}
-                  />
-                )
-            )}
-          </ul>
-        </section>
-      )
-    }
+                return (
+                  <a href={`/docs/${firstDoc.slug}/`} class="category-card">
+                    <div class="category-icon">
+                      {meta.icon === "rocket" && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                        </svg>
+                      )}
+                      {meta.icon === "book" && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                        </svg>
+                      )}
+                      {meta.icon === "code" && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <polyline points="16 18 22 12 16 6" />
+                          <polyline points="8 6 2 12 8 18" />
+                        </svg>
+                      )}
+                      {meta.icon === "question" && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                        >
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                          <path d="M12 17h.01" />
+                        </svg>
+                      )}
+                    </div>
+                    <h3 class="category-title">{meta.label}</h3>
+                    <p class="category-description">{meta.description}</p>
+                    <span class="category-count">
+                      {categoryDocs.length} articles
+                    </span>
+                  </a>
+                );
+              })
+          }
+        </div>
+      </div>
+    </section>
 
-    <div class="all-posts-btn-wrapper">
-      <LinkButton href="/posts/">
-        All Posts
-        <svg xmlns="http://www.w3.org/2000/svg"
-          ><path
-            d="m11.293 17.293 1.414 1.414L19.414 12l-6.707-6.707-1.414 1.414L15.586 11H6v2h9.586z"
-          ></path>
-        </svg>
-      </LinkButton>
-    </div>
+    <!-- Services Preview -->
+    <section class="services-preview">
+      <div class="section-container">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-description">
+          Get expert help for your projects with our consultation services
+        </p>
+
+        <div class="services-grid">
+          {
+            sortedServices.slice(0, 3).map(service => (
+              <div class="service-card">
+                <h3 class="service-title">{service.data.title}</h3>
+                <p class="service-description">{service.data.description}</p>
+                <div class="service-price">
+                  <span class="price">{service.data.price}</span>
+                  {service.data.duration && (
+                    <span class="duration">{service.data.duration}</span>
+                  )}
+                </div>
+                <a
+                  href={service.data.bookingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="service-book"
+                >
+                  Book Now
+                </a>
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="services-cta">
+          <a href="/services/" class="btn-secondary">View All Services</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick Links -->
+    <section class="quick-links">
+      <div class="section-container">
+        <h2 class="section-title">Quick Access</h2>
+        <div class="quick-links-grid">
+          <a href="/docs/getting-started/introduction/" class="quick-link">
+            <div class="quick-link-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"
+                ></path>
+                <path
+                  d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"
+                ></path>
+              </svg>
+            </div>
+            <div class="quick-link-content">
+              <h3>Get Started</h3>
+              <p>New here? Start with our introduction guide.</p>
+            </div>
+          </a>
+          <a href="/docs/faq/general/" class="quick-link">
+            <div class="quick-link-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <path d="M12 17h.01"></path>
+              </svg>
+            </div>
+            <div class="quick-link-content">
+              <h3>FAQ</h3>
+              <p>Find answers to common questions.</p>
+            </div>
+          </a>
+          <a href="/search/" class="quick-link">
+            <div class="quick-link-icon">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.3-4.3"></path>
+              </svg>
+            </div>
+            <div class="quick-link-content">
+              <h3>Search</h3>
+              <p>Find what you're looking for quickly.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
   </main>
 
   <Footer />
 </Layout>
 
 <style>
-  /* ===== Hero Section ===== */
-  #hero {
-    @apply pb-6 pt-8;
-  }
-  #hero h1 {
-    @apply my-4 inline-block text-3xl font-bold sm:my-8 sm:text-5xl;
-  }
-  #hero .rss-link {
-    @apply mb-6;
-  }
-  #hero .rss-icon {
-    @apply mb-2 h-6 w-6 scale-110 fill-skin-accent sm:mb-3 sm:scale-125;
-  }
-  #hero p {
-    @apply my-2;
-  }
-  .social-wrapper {
-    @apply mt-4 flex flex-col sm:flex-row sm:items-center;
-  }
-  .social-links {
-    @apply mb-1 mr-2 whitespace-nowrap sm:mb-0;
+  /* Hero Section */
+  .hero {
+    @apply py-16 pt-28;
+    background: linear-gradient(
+      to bottom,
+      rgba(var(--color-card), 0.3),
+      transparent
+    );
   }
 
-  /* ===== Featured & Recent Posts Sections ===== */
-  #featured,
-  #recent-posts {
-    @apply pb-6 pt-12;
+  .hero-content {
+    @apply mx-auto px-6 text-center;
+    max-width: 1400px;
   }
-  #featured h2,
-  #recent-posts h2 {
-    @apply text-2xl font-semibold tracking-wide;
+
+  .hero-title {
+    @apply mb-4 text-3xl font-bold text-skin-base sm:text-4xl lg:text-5xl;
   }
-  .all-posts-btn-wrapper {
-    @apply my-8 text-center;
+
+  .hero-description {
+    @apply mx-auto mb-6 max-w-3xl text-base text-skin-base opacity-80 sm:text-lg;
+  }
+
+  .hero-actions {
+    @apply mb-8 flex flex-col justify-center gap-4 sm:flex-row;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg
+           bg-skin-accent px-6 py-3 font-semibold text-skin-inverted
+           transition-all hover:opacity-90 hover:shadow-lg;
+  }
+
+  .btn-primary svg {
+    @apply h-5 w-5 fill-transparent stroke-current;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg
+           border border-skin-line px-6 py-3 font-semibold
+           text-skin-base transition-all hover:bg-skin-card;
+  }
+
+  .hero-search {
+    @apply mx-auto max-w-2xl;
+  }
+
+  .search-box {
+    @apply flex items-center gap-3 rounded-lg border border-skin-line
+           bg-skin-fill px-4 py-3 text-skin-base opacity-70
+           transition-all hover:border-skin-accent hover:opacity-100;
+  }
+
+  .search-box svg {
+    @apply h-5 w-5 fill-transparent stroke-current opacity-50;
+  }
+
+  .search-box span {
+    @apply flex-1 text-left;
+  }
+
+  .search-box kbd {
+    @apply hidden rounded border border-skin-line bg-skin-card
+           px-2 py-0.5 text-xs sm:inline;
+  }
+
+  /* Section Styles */
+  .section-container {
+    @apply mx-auto px-6 py-12;
+    max-width: 1400px;
+  }
+
+  .section-title {
+    @apply mb-3 text-center text-2xl font-bold text-skin-base sm:text-3xl;
+  }
+
+  .section-description {
+    @apply mb-10 text-center text-skin-base opacity-70;
+  }
+
+  /* Categories Grid */
+  .category-grid {
+    @apply grid gap-5 sm:grid-cols-2 lg:grid-cols-4;
+  }
+
+  .category-card {
+    @apply flex flex-col rounded-xl border border-skin-line p-5
+           transition-all duration-200 hover:border-skin-accent hover:shadow-lg;
+  }
+
+  .category-icon {
+    @apply mb-3 flex h-10 w-10 items-center justify-center rounded-lg text-skin-accent;
+    background-color: rgba(var(--color-accent), 0.1);
+  }
+
+  .category-icon svg {
+    @apply h-5 w-5 fill-transparent stroke-current;
+  }
+
+  .category-title {
+    @apply mb-2 font-semibold text-skin-base;
+  }
+
+  .category-description {
+    @apply mb-3 flex-1 text-sm text-skin-base opacity-70;
+  }
+
+  .category-count {
+    @apply text-sm text-skin-accent;
+  }
+
+  /* Services Preview */
+  .services-preview {
+    background-color: rgba(var(--color-card), 0.3);
+  }
+
+  .services-grid {
+    @apply grid gap-5 md:grid-cols-3;
+  }
+
+  .service-card {
+    @apply flex flex-col rounded-xl border border-skin-line bg-skin-fill p-5;
+  }
+
+  .service-title {
+    @apply mb-2 font-semibold text-skin-base;
+  }
+
+  .service-description {
+    @apply mb-3 flex-1 text-sm text-skin-base opacity-70;
+  }
+
+  .service-price {
+    @apply mb-3 flex items-baseline gap-2;
+  }
+
+  .price {
+    @apply text-xl font-bold text-skin-accent;
+  }
+
+  .duration {
+    @apply text-sm text-skin-base opacity-60;
+  }
+
+  .service-book {
+    @apply rounded-lg bg-skin-accent px-4 py-2 text-center
+           font-medium text-skin-inverted transition-opacity hover:opacity-90;
+  }
+
+  .services-cta {
+    @apply mt-6 text-center;
+  }
+
+  /* Quick Links */
+  .quick-links {
+    @apply border-t border-skin-line pb-6;
+  }
+
+  .quick-links .section-title {
+    @apply mb-6;
+  }
+
+  .quick-links-grid {
+    @apply grid gap-5 md:grid-cols-3;
+  }
+
+  .quick-link {
+    @apply flex items-start gap-4 rounded-lg border border-skin-line
+           p-4 transition-all hover:border-skin-accent hover:bg-skin-card;
+  }
+
+  .quick-link-icon {
+    @apply flex h-10 w-10 flex-shrink-0 items-center justify-center
+           rounded-lg text-skin-accent;
+    background-color: rgba(var(--color-accent), 0.1);
+  }
+
+  .quick-link-icon svg {
+    @apply h-5 w-5 fill-transparent stroke-current;
+  }
+
+  .quick-link-content h3 {
+    @apply font-semibold text-skin-base;
+  }
+
+  .quick-link-content p {
+    @apply text-sm text-skin-base opacity-70;
   }
 </style>

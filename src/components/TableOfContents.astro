@@ -1,0 +1,98 @@
+---
+import type { MarkdownHeading } from "astro";
+
+export interface Props {
+  headings: MarkdownHeading[];
+}
+
+const { headings } = Astro.props;
+
+// Filter to only h2 and h3
+const filteredHeadings = headings.filter(h => h.depth === 2 || h.depth === 3);
+---
+
+{
+  filteredHeadings.length > 0 && (
+    <nav class="toc" aria-label="Table of contents">
+      <h2 class="toc-title">On this page</h2>
+      <ul class="toc-list">
+        {filteredHeadings.map(heading => (
+          <li class:list={["toc-item", `depth-${heading.depth}`]}>
+            <a href={`#${heading.slug}`} class="toc-link">
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+<style>
+  .toc {
+    @apply sticky top-24;
+  }
+
+  .toc-title {
+    @apply mb-3 text-xs font-semibold uppercase tracking-wider text-skin-base opacity-70;
+  }
+
+  .toc-list {
+    @apply flex flex-col gap-1 border-l border-skin-line pl-3;
+  }
+
+  .toc-item {
+    @apply list-none;
+  }
+
+  .toc-item.depth-3 {
+    @apply pl-3;
+  }
+
+  .toc-link {
+    @apply block py-1 text-sm text-skin-base opacity-70
+           transition-all duration-150 hover:opacity-100 hover:text-skin-accent;
+  }
+
+  .toc-link.active {
+    @apply font-medium text-skin-accent opacity-100;
+  }
+</style>
+
+<script>
+  function initTocHighlight() {
+    const tocLinks = document.querySelectorAll(".toc-link");
+    const headings = document.querySelectorAll("article h2, article h3");
+
+    if (!tocLinks.length || !headings.length) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute("id");
+            tocLinks.forEach(link => {
+              link.classList.toggle(
+                "active",
+                link.getAttribute("href") === `#${id}`
+              );
+            });
+          }
+        });
+      },
+      {
+        rootMargin: "-80px 0px -80% 0px",
+        threshold: 0,
+      }
+    );
+
+    headings.forEach(heading => {
+      if (heading.id) {
+        observer.observe(heading);
+      }
+    });
+  }
+
+  initTocHighlight();
+  document.addEventListener("astro:after-swap", initTocHighlight);
+</script>

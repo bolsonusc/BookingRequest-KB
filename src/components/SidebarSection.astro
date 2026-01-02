@@ -1,0 +1,187 @@
+---
+import type { NavigationItem } from "@/types";
+import SidebarItem from "./SidebarItem.astro";
+
+export interface Props {
+  title: string;
+  icon?: string;
+  items: NavigationItem[];
+  currentPath: string;
+}
+
+const { title, icon, items, currentPath } = Astro.props;
+
+// Check if any child is active
+const hasActiveChild = items.some(item => item.href === currentPath);
+---
+
+<div class="sidebar-section">
+  <button
+    class="section-header"
+    aria-expanded={hasActiveChild ? "true" : "false"}
+    type="button"
+  >
+    <span class="section-title">
+      {
+        icon && (
+          <span class="section-icon" aria-hidden="true">
+            {icon === "rocket" && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+              </svg>
+            )}
+            {icon === "book" && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+              </svg>
+            )}
+            {icon === "code" && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+            )}
+            {icon === "question" && (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <path d="M12 17h.01" />
+              </svg>
+            )}
+          </span>
+        )
+      }
+      {title}
+    </span>
+    <svg
+      class="chevron"
+      xmlns="http://www.w3.org/2000/svg"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+      <path d="m6 9 6 6 6-6"></path>
+    </svg>
+  </button>
+  <ul class="section-items" data-expanded={hasActiveChild ? "true" : "false"}>
+    {
+      items.map(item => (
+        <SidebarItem
+          title={item.title}
+          href={item.href || "#"}
+          isActive={item.href === currentPath}
+          badge={item.badge}
+        />
+      ))
+    }
+  </ul>
+</div>
+
+<style>
+  .sidebar-section {
+    @apply flex flex-col;
+  }
+
+  .section-header {
+    @apply flex w-full cursor-pointer items-center justify-between
+           rounded-md px-3 py-2 text-left text-sm font-semibold
+           uppercase tracking-wider text-skin-base opacity-80
+           transition-colors hover:bg-skin-card hover:opacity-100;
+  }
+
+  .section-title {
+    @apply flex items-center gap-2;
+  }
+
+  .section-icon {
+    @apply flex h-4 w-4 items-center justify-center;
+  }
+
+  .section-icon svg {
+    @apply h-4 w-4 fill-transparent stroke-current;
+  }
+
+  .chevron {
+    @apply h-4 w-4 fill-transparent stroke-current transition-transform duration-200;
+  }
+
+  .section-header[aria-expanded="true"] .chevron {
+    @apply rotate-180;
+  }
+
+  .section-items {
+    @apply mt-1 flex flex-col gap-0.5 overflow-hidden pl-2;
+    max-height: 0;
+    transition: max-height 0.2s ease-out;
+  }
+
+  .section-items[data-expanded="true"] {
+    max-height: 500px;
+  }
+</style>
+
+<script>
+  function initSectionToggles() {
+    document.querySelectorAll(".section-header").forEach(header => {
+      header.addEventListener("click", () => {
+        const expanded = header.getAttribute("aria-expanded") === "true";
+        header.setAttribute("aria-expanded", expanded ? "false" : "true");
+        const items = header.nextElementSibling as HTMLElement;
+        if (items) {
+          items.dataset.expanded = expanded ? "false" : "true";
+        }
+      });
+    });
+  }
+
+  initSectionToggles();
+  document.addEventListener("astro:after-swap", initSectionToggles);
+</script>

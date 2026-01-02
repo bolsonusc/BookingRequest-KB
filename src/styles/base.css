@@ -34,7 +34,8 @@
   }
   section,
   footer {
-    @apply mx-auto max-w-3xl px-4;
+    @apply mx-auto px-4;
+    max-width: 1400px;
   }
   a {
     @apply outline-2 outline-offset-1 outline-skin-fill 
@@ -131,5 +132,108 @@
   }
   .focus-outline {
     @apply outline-2 outline-offset-1 outline-skin-fill focus-visible:no-underline focus-visible:outline-dashed;
+  }
+
+  /* Search input focus ring */
+  .search-input:focus {
+    box-shadow: 0 0 0 3px rgba(var(--color-accent), 0.15);
+  }
+
+  /* Enhanced prose styling for docs */
+  .docs-prose {
+    @apply text-skin-base;
+  }
+
+  .docs-prose h1 {
+    @apply text-2xl font-bold mb-4 text-skin-base;
+  }
+
+  .docs-prose h2 {
+    @apply text-xl font-bold mt-8 mb-3 pb-2 border-b border-skin-line text-skin-base;
+  }
+
+  .docs-prose h3 {
+    @apply text-lg font-semibold mt-6 mb-2 text-skin-base;
+  }
+
+  .docs-prose h4 {
+    @apply text-base font-semibold mt-4 mb-2 text-skin-base;
+  }
+
+  .docs-prose p {
+    @apply mb-3 leading-relaxed;
+  }
+
+  .docs-prose ul {
+    @apply mb-3 ml-5 list-disc;
+  }
+
+  .docs-prose ol {
+    @apply mb-3 ml-5 list-decimal;
+  }
+
+  .docs-prose li {
+    @apply mb-1.5 leading-relaxed;
+  }
+
+  .docs-prose a {
+    @apply text-skin-accent underline decoration-1 underline-offset-2 hover:decoration-2;
+  }
+
+  .docs-prose code {
+    @apply rounded bg-skin-card px-1.5 py-0.5 text-sm font-medium;
+  }
+
+  .docs-prose pre {
+    @apply my-4 overflow-x-auto rounded-lg border border-skin-line p-3;
+  }
+
+  .docs-prose pre code {
+    @apply bg-transparent p-0 text-sm;
+  }
+
+  .docs-prose table {
+    @apply my-4 w-full border-collapse overflow-hidden rounded-lg border border-skin-line text-sm;
+  }
+
+  .docs-prose th {
+    @apply border-b border-skin-line bg-skin-card px-3 py-2 text-left font-semibold;
+  }
+
+  .docs-prose td {
+    @apply border-b border-skin-line px-3 py-2;
+  }
+
+  .docs-prose blockquote {
+    @apply my-4 border-l-4 border-skin-accent pl-4 italic opacity-80;
+  }
+
+  .docs-prose hr {
+    @apply my-6 border-skin-line;
+  }
+
+  .docs-prose strong {
+    @apply font-semibold text-skin-base;
+  }
+
+  /* Search result badges */
+  .doc-badge {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: rgb(59, 130, 246);
+  }
+
+  html[data-theme="dark"] .doc-badge {
+    background-color: rgba(96, 165, 250, 0.2);
+    color: rgb(147, 197, 253);
+  }
+
+  .service-badge {
+    background-color: rgba(34, 197, 94, 0.15);
+    color: rgb(34, 197, 94);
+  }
+
+  html[data-theme="dark"] .service-badge {
+    background-color: rgba(74, 222, 128, 0.2);
+    color: rgb(134, 239, 172);
   }
 }

@@ -1,0 +1,156 @@
+---
+import type { NavigationItem } from "@/types";
+import SidebarSection from "./SidebarSection.astro";
+
+export interface Props {
+  navigation: NavigationItem[];
+  currentPath: string;
+}
+
+const { navigation, currentPath } = Astro.props;
+---
+
+<aside id="sidebar" class="sidebar">
+  <div class="sidebar-content">
+    <!-- Search Box -->
+    <div class="sidebar-search">
+      <a href="/search/" class="search-box">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+        <span>Search docs...</span>
+        <kbd>⌘K</kbd>
+      </a>
+    </div>
+
+    <nav class="sidebar-nav" aria-label="Documentation">
+      {
+        navigation.map(section => (
+          <SidebarSection
+            title={section.title}
+            icon={section.icon}
+            items={section.children || []}
+            currentPath={currentPath}
+          />
+        ))
+      }
+    </nav>
+  </div>
+</aside>
+
+<!-- Mobile overlay -->
+<div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+<style>
+  .sidebar {
+    @apply fixed left-0 top-0 z-40 h-screen w-72
+           -translate-x-full transform border-r border-skin-line
+           bg-skin-fill transition-transform duration-300 ease-in-out
+           lg:translate-x-0;
+  }
+
+  .sidebar.is-open {
+    @apply translate-x-0;
+  }
+
+  .sidebar-content {
+    @apply h-full overflow-y-auto pb-8 pt-20;
+  }
+
+  .sidebar-search {
+    @apply px-4 pb-4 mb-2;
+  }
+
+  .search-box {
+    @apply flex items-center gap-2 w-full px-3 py-2 rounded-lg
+           border border-skin-line bg-skin-card
+           text-sm text-skin-base opacity-70
+           transition-all hover:opacity-100 hover:border-skin-accent;
+  }
+
+  .search-box svg {
+    @apply h-4 w-4 flex-shrink-0 stroke-current fill-transparent;
+  }
+
+  .search-box span {
+    @apply flex-1;
+  }
+
+  .search-box kbd {
+    @apply px-1.5 py-0.5 rounded text-xs border border-skin-line bg-skin-fill;
+  }
+
+  .sidebar-nav {
+    @apply flex flex-col gap-4 px-4;
+  }
+
+  .sidebar-overlay {
+    @apply fixed inset-0 z-30 hidden lg:hidden;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  .sidebar-overlay.is-open {
+    @apply block;
+  }
+</style>
+
+<script>
+  function initSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebar-overlay");
+    const toggleBtn = document.getElementById("sidebar-toggle");
+
+    function openSidebar() {
+      sidebar?.classList.add("is-open");
+      overlay?.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSidebar() {
+      sidebar?.classList.remove("is-open");
+      overlay?.classList.remove("is-open");
+      document.body.style.overflow = "";
+    }
+
+    toggleBtn?.addEventListener("click", () => {
+      if (sidebar?.classList.contains("is-open")) {
+        closeSidebar();
+      } else {
+        openSidebar();
+      }
+    });
+
+    overlay?.addEventListener("click", closeSidebar);
+
+    // Close sidebar on escape key
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && sidebar?.classList.contains("is-open")) {
+        closeSidebar();
+      }
+    });
+
+    // Close sidebar when clicking a link (mobile)
+    sidebar?.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth < 1024) {
+          closeSidebar();
+        }
+      });
+    });
+  }
+
+  initSidebar();
+  document.addEventListener("astro:after-swap", initSidebar);
+</script>

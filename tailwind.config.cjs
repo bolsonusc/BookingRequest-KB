@@ -11,10 +11,12 @@ function withOpacity(variableName) {
 module.exports = {
   content: ["./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}"],
   theme: {
-    // Remove the following screen breakpoint or add other breakpoints
-    // if one breakpoint is not enough for you
+    // Screen breakpoints for Knowledge Base layout
     screens: {
       sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
     },
 
     extend: {
@@ -52,6 +54,17 @@ module.exports = {
           accent: withOpacity("--color-accent"),
         },
         transparent: "transparent",
+      },
+      stroke: {
+        skin: {
+          base: withOpacity("--color-text-base"),
+          accent: withOpacity("--color-accent"),
+        },
+      },
+      ringColor: {
+        skin: {
+          accent: withOpacity("--color-accent"),
+        },
       },
       fontFamily: {
         mono: ["IBM Plex Mono", "monospace"],
